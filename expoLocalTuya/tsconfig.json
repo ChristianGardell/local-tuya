@@ -4,7 +4,8 @@
     "moduleResolution": "bundler",
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@modules/*": ["./modules/*"]
     }
   }
 }

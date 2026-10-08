@@ -1,73 +1,65 @@
 import Slider from '@react-native-community/slider';
 import { useTheme } from '@react-navigation/native';
-import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { withUniwind } from 'uniwind';
-import { LAMP_LIMITS, normalizeBrightness, normalizeHue } from '@/features/lamp/values';
+import { LAMP_LIMITS, normalizeBrightness, normalizeTemperature } from '@/features/lamp/values';
+import { useLamp } from '@/features/lamp/useLamp';
 
 const ScreenSafeArea = withUniwind(SafeAreaView);
 const LampSlider = withUniwind(Slider);
 
 export function HomeScreen() {
   const { colors } = useTheme();
-  const [isOn, setIsOn] = useState(false);
-  const [hue, setHue] = useState(0);
-  const [brightness, setBrightness] = useState(1000);
-  const hueColor = `hsl(${hue}, 100%, 50%)`;
-  const lampColor = `hsl(${hue}, 100%, ${brightness / 20}%)`;
+  const lamp = useLamp();
+  const { temperature, brightness } = lamp;
+  const isOn = lamp.state?.isOn ?? false;
+  const disabled = lamp.busy || !lamp.state;
+  const whiteColor = `rgb(255, ${Math.round(190 + temperature * 0.065)}, ${Math.round(120 + temperature * 0.135)})`;
 
   return (
     <ScreenSafeArea className="flex-1 bg-stone-50 dark:bg-stone-950">
       <ScrollView contentContainerClassName="grow justify-center gap-8 px-6 py-8">
         <View className="gap-2">
-          <Text
-            accessibilityRole="header"
-            className="text-3xl font-semibold text-stone-900 dark:text-stone-50"
-          >
-            Lamp
-          </Text>
           <Text className="text-base text-stone-500 dark:text-stone-400">
-            Set the mood with color and light.
+            Adjust warm/cool white and brightness.
           </Text>
         </View>
 
         <View className="items-center gap-4 py-4">
           <View
-            accessible={false}
             className="h-32 w-32 rounded-full border-8 border-white dark:border-stone-800"
-            style={{ backgroundColor: isOn ? lampColor : colors.border }}
+            style={{ backgroundColor: isOn ? whiteColor : colors.border }}
           />
           <Text className="text-base font-medium text-stone-700 dark:text-stone-300">
-            {isOn ? 'On' : 'Off'}
+            {!lamp.state ? (lamp.busy ? 'Connecting…' : 'Unavailable') : isOn ? 'On' : 'Off'}
           </Text>
         </View>
 
         <View className="gap-8 rounded-3xl bg-white p-5 dark:bg-stone-900">
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-medium text-stone-900 dark:text-stone-50">Hue</Text>
+              <Text className="text-lg font-medium text-stone-900 dark:text-stone-50">
+                Warm / cool
+              </Text>
               <Text className="text-base text-stone-500 tabular-nums dark:text-stone-400">
-                {hue}°
+                {temperature / 10}% cool
               </Text>
             </View>
             <LampSlider
-              accessibilityLabel="Hue"
-              accessibilityValue={{ min: 0, max: 360, now: hue, text: `${hue} degrees` }}
-              className="h-12 w-full"
-              minimumValue={LAMP_LIMITS.hue.min}
-              maximumValue={LAMP_LIMITS.hue.max}
+              className="h-16 w-full"
+              style={{ transform: [{ scaleY: 1.6 }] }}
+              minimumValue={LAMP_LIMITS.temperature.min}
+              maximumValue={LAMP_LIMITS.temperature.max}
               step={1}
-              value={hue}
-              onValueChange={value => setHue(normalizeHue(value))}
-              minimumTrackTintColor={hueColor}
+              value={temperature}
+              disabled={disabled}
+              onValueChange={value => lamp.previewTemperature(value)}
+              onSlidingComplete={value => void lamp.setTemperature(normalizeTemperature(value))}
+              minimumTrackTintColor={whiteColor}
               maximumTrackTintColor={colors.border}
-              thumbTintColor={hueColor}
+              thumbTintColor={whiteColor}
             />
-            <View className="flex-row justify-between">
-              <Text className="text-sm text-stone-500 dark:text-stone-400">0°</Text>
-              <Text className="text-sm text-stone-500 dark:text-stone-400">360°</Text>
-            </View>
           </View>
 
           <View className="gap-3">
@@ -80,39 +72,40 @@ export function HomeScreen() {
               </Text>
             </View>
             <LampSlider
-              accessibilityLabel="Brightness"
-              accessibilityValue={{
-                min: 10,
-                max: 1000,
-                now: brightness,
-                text: `${brightness / 10} percent`,
-              }}
-              className="h-12 w-full"
+              className="h-16 w-full"
+              style={{ transform: [{ scaleY: 1.6 }] }}
               minimumValue={LAMP_LIMITS.brightness.min}
               maximumValue={LAMP_LIMITS.brightness.max}
               step={1}
               value={brightness}
-              onValueChange={value => setBrightness(normalizeBrightness(value))}
+              disabled={disabled}
+              onValueChange={value => lamp.previewBrightness(value)}
+              onSlidingComplete={value => void lamp.setBrightness(normalizeBrightness(value))}
               minimumTrackTintColor={colors.text}
               maximumTrackTintColor={colors.border}
               thumbTintColor={colors.text}
             />
-            <View className="flex-row justify-between">
-              <Text className="text-sm text-stone-500 dark:text-stone-400">1%</Text>
-              <Text className="text-sm text-stone-500 dark:text-stone-400">100%</Text>
-            </View>
           </View>
         </View>
 
+        {lamp.error && (
+          <View className="gap-3">
+            <Text className="text-base text-red-700 dark:text-red-400">{lamp.error}</Text>
+            <Pressable disabled={lamp.busy} onPress={() => void lamp.refresh()}>
+              <Text className="text-base font-semibold text-stone-900 dark:text-stone-50">
+                Refresh lamp
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={isOn ? 'Turn lamp off' : 'Turn lamp on'}
-          accessibilityState={{ selected: isOn }}
+          disabled={disabled}
           className="min-h-14 items-center justify-center rounded-2xl bg-stone-900 px-6 py-4 active:opacity-70 dark:bg-stone-100"
-          onPress={() => setIsOn(previous => !previous)}
+          onPress={() => void lamp.setPower(!isOn)}
         >
           <Text className="text-lg font-semibold text-white dark:text-stone-900">
-            {isOn ? 'Turn off' : 'Turn on'}
+            {lamp.busy ? 'Connecting…' : isOn ? 'Turn off' : 'Turn on'}
           </Text>
         </Pressable>
       </ScrollView>
