@@ -1,20 +1,71 @@
 import Slider from '@react-native-community/slider';
 import { useTheme } from '@react-navigation/native';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Pressable, ScrollView, Text, View } from 'react-native';
+import { requireOptionalNativeModule } from 'expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { withUniwind } from 'uniwind';
 import { LAMP_LIMITS, normalizeBrightness, normalizeTemperature } from '@/features/lamp/values';
-import { useLamp } from '@/features/lamp/useLamp';
+
+interface LampState {
+  isOn: boolean;
+  temperature: number;
+  brightness: number;
+}
+
+interface TuyaLampModule {
+  getStatus(): Promise<LampState>;
+  setPower(isOn: boolean): Promise<LampState>;
+  setBrightness(value: number): Promise<LampState>;
+  setTemperature(value: number): Promise<LampState>;
+}
+
+const lampModule = requireOptionalNativeModule<TuyaLampModule>('TuyaLamp');
 
 const ScreenSafeArea = withUniwind(SafeAreaView);
 const LampSlider = withUniwind(Slider);
 
 export function HomeScreen() {
   const { colors } = useTheme();
-  const lamp = useLamp();
-  const { temperature, brightness } = lamp;
-  const isOn = lamp.state?.isOn ?? false;
-  const disabled = lamp.busy || !lamp.state;
+  const [lampState, setLampState] = useState<LampState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const running = useRef(false);
+  const mounted = useRef(false);
+
+  const request = useCallback(async (operation: (lamp: TuyaLampModule) => Promise<LampState>) => {
+    if (running.current) return;
+    running.current = true;
+    setError(null);
+    try {
+      if (!lampModule) throw new Error('Rebuild the Android app to enable lamp control.');
+      const result = await operation(lampModule);
+      if (mounted.current) setLampState(result);
+    } catch (cause) {
+      if (mounted.current) {
+        setError(cause instanceof Error ? cause.message : 'Could not reach the lamp. Check Wi-Fi.');
+      }
+    } finally {
+      running.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    void Promise.resolve().then(() => {
+      if (mounted.current) void request(lamp => lamp.getStatus());
+    });
+    const subscription = AppState.addEventListener('change', next => {
+      if (next === 'active') void request(lamp => lamp.getStatus());
+    });
+    return () => {
+      mounted.current = false;
+      subscription.remove();
+    };
+  }, [request]);
+
+  const temperature = lampState?.temperature ?? 0;
+  const brightness = lampState?.brightness ?? 1000;
+  const isOn = lampState?.isOn ?? false;
   const whiteColor = `rgb(255, ${Math.round(190 + temperature * 0.065)}, ${Math.round(120 + temperature * 0.135)})`;
 
   return (
@@ -32,7 +83,7 @@ export function HomeScreen() {
             style={{ backgroundColor: isOn ? whiteColor : colors.border }}
           />
           <Text className="text-base font-medium text-stone-700 dark:text-stone-300">
-            {!lamp.state ? (lamp.busy ? 'Connecting…' : 'Unavailable') : isOn ? 'On' : 'Off'}
+            {!lampState ? 'Unavailable' : isOn ? 'On' : 'Off'}
           </Text>
         </View>
 
@@ -53,9 +104,9 @@ export function HomeScreen() {
               maximumValue={LAMP_LIMITS.temperature.max}
               step={1}
               value={temperature}
-              disabled={disabled}
-              onValueChange={value => lamp.previewTemperature(value)}
-              onSlidingComplete={value => void lamp.setTemperature(normalizeTemperature(value))}
+              onSlidingComplete={value =>
+                void request(lamp => lamp.setTemperature(normalizeTemperature(value)))
+              }
               minimumTrackTintColor={whiteColor}
               maximumTrackTintColor={colors.border}
               thumbTintColor={whiteColor}
@@ -78,9 +129,9 @@ export function HomeScreen() {
               maximumValue={LAMP_LIMITS.brightness.max}
               step={1}
               value={brightness}
-              disabled={disabled}
-              onValueChange={value => lamp.previewBrightness(value)}
-              onSlidingComplete={value => void lamp.setBrightness(normalizeBrightness(value))}
+              onSlidingComplete={value =>
+                void request(lamp => lamp.setBrightness(normalizeBrightness(value)))
+              }
               minimumTrackTintColor={colors.text}
               maximumTrackTintColor={colors.border}
               thumbTintColor={colors.text}
@@ -88,10 +139,10 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {lamp.error && (
+        {error && (
           <View className="gap-3">
-            <Text className="text-base text-red-700 dark:text-red-400">{lamp.error}</Text>
-            <Pressable disabled={lamp.busy} onPress={() => void lamp.refresh()}>
+            <Text className="text-base text-red-700 dark:text-red-400">{error}</Text>
+            <Pressable onPress={() => void request(lamp => lamp.getStatus())}>
               <Text className="text-base font-semibold text-stone-900 dark:text-stone-50">
                 Refresh lamp
               </Text>
@@ -100,12 +151,11 @@ export function HomeScreen() {
         )}
 
         <Pressable
-          disabled={disabled}
           className="min-h-14 items-center justify-center rounded-2xl bg-stone-900 px-6 py-4 active:opacity-70 dark:bg-stone-100"
-          onPress={() => void lamp.setPower(!isOn)}
+          onPress={() => void request(lamp => lamp.setPower(!isOn))}
         >
           <Text className="text-lg font-semibold text-white dark:text-stone-900">
-            {lamp.busy ? 'Connecting…' : isOn ? 'Turn off' : 'Turn on'}
+            {isOn ? 'Turn off' : 'Turn on'}
           </Text>
         </Pressable>
       </ScrollView>
