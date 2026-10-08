@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
+    "android:release": "expo prebuild --platform android --no-install && expo run:android --variant release",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "dupe": "knip",

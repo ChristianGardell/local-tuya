@@ -49,6 +49,7 @@ export function HomeScreen() {
     }
   }, []);
 
+  // initial mount and app state change listener to refresh lamp status
   useEffect(() => {
     mounted.current = true;
     void Promise.resolve().then(() => {
@@ -77,6 +78,7 @@ export function HomeScreen() {
           </Text>
         </View>
 
+        {/* LAMP PREVIEW */}
         <View className="items-center gap-4 py-4">
           <View
             className="h-32 w-32 rounded-full border-8 border-white dark:border-stone-800"
@@ -87,6 +89,7 @@ export function HomeScreen() {
           </Text>
         </View>
 
+        {/* SLIDER CARD */}
         <View className="gap-8 rounded-3xl bg-white p-5 dark:bg-stone-900">
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
@@ -139,6 +142,7 @@ export function HomeScreen() {
           </View>
         </View>
 
+        {/* ERROR AND RETRY */}
         {error && (
           <View className="gap-3">
             <Text className="text-base text-red-700 dark:text-red-400">{error}</Text>
@@ -150,6 +154,7 @@ export function HomeScreen() {
           </View>
         )}
 
+        {/* POWER BUTTON */}
         <Pressable
           className="min-h-14 items-center justify-center rounded-2xl bg-stone-900 px-6 py-4 active:opacity-70 dark:bg-stone-100"
           onPress={() => void request(lamp => lamp.setPower(!isOn))}
