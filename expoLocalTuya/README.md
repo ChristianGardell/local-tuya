@@ -15,7 +15,7 @@ Use an Android development build with `expo-dev-client`. To build in the cloud, 
 
 ## Styling
 
-Uniwind is configured in `metro.config.js`. The root `global.css` imports Tailwind CSS and Uniwind and is loaded in `src/App.tsx`. Use `className` on React Native components, as shown in the Home screen. Third-party components need Uniwind's `withUniwind` wrapper to accept classes.
+Uniwind is configured in `metro.config.js`. The root `global.css` imports Tailwind CSS and Uniwind and is loaded in `src/App.tsx`. Use `className` on React Native components. Third-party components need Uniwind's `withUniwind` wrapper to accept classes.
 
 Metro generates `uniwind-types.d.ts` in the app root. Start Metro or run an Android export to generate it before the first typecheck if it is missing. Uniwind requires no additional Babel preset or Expo config plugin.
 

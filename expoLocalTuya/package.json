@@ -7,6 +7,7 @@
     "android": "expo run:android",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "dupe": "knip",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "cd .. && husky expoLocalTuya/.husky"
@@ -37,6 +38,7 @@
     "eslint-config-expo": "~56.0.4",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "knip": "^6.40.0",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",

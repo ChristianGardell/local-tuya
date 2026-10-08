@@ -1,18 +1,10 @@
 import '../global.css';
 
-import { Assets as NavigationAssets } from '@react-navigation/elements';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { Asset } from 'expo-asset';
 import { createURL } from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
-import { Navigation } from './navigation';
-
-Asset.loadAsync([
-  ...NavigationAssets,
-  require('./assets/newspaper.png'),
-  require('./assets/bell.png'),
-]);
+import { AppStackNavigator } from '@/navigation/AppStackNavigator';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,7 +19,7 @@ export function App() {
   const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
 
   return (
-    <Navigation
+    <AppStackNavigator
       theme={theme}
       linking={linking}
       onReady={() => {
