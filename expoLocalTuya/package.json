@@ -13,6 +13,7 @@
     "prepare": "cd .. && husky expoLocalTuya/.husky"
   },
   "dependencies": {
+    "@react-native-community/slider": "5.2.0",
     "@react-navigation/bottom-tabs": "^7.18.3",
     "@react-navigation/elements": "^2.9.26",
     "@react-navigation/native": "^7.3.4",
