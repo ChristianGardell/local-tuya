@@ -4,10 +4,11 @@
   "main": "index.tsx",
   "scripts": {
     "start": "expo start --dev-client",
-    "android": "expo run:android"
+    "android": "expo run:android",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.15",
     "@react-navigation/bottom-tabs": "^7.18.3",
     "@react-navigation/elements": "^2.9.26",
     "@react-navigation/native": "^7.3.4",
@@ -16,7 +17,6 @@
     "expo-asset": "~56.0.17",
     "expo-dev-client": "~56.0.20",
     "expo-linking": "~56.0.18",
-    "expo-modules-core": "~56.0.27",
     "expo-splash-screen": "~56.0.10",
     "expo-system-ui": "~56.0.5",
     "react": "19.2.3",
@@ -30,6 +30,8 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~19.2.10",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~56.0.4",
     "typescript": "~6.0.3"
   },
   "private": true
