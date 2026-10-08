@@ -17,7 +17,7 @@ Use an Android development build with `expo-dev-client`. To build in the cloud, 
 
 Uniwind is configured in `metro.config.js`. The root `global.css` imports Tailwind CSS and Uniwind and is loaded in `src/App.tsx`. Use `className` on React Native components, as shown in the Home screen. Third-party components need Uniwind's `withUniwind` wrapper to accept classes.
 
-Metro generates `src/uniwind-types.d.ts`. Start Metro or run an Android export to generate it before the first typecheck if it is missing. Uniwind requires no additional Babel preset or Expo config plugin.
+Metro generates `uniwind-types.d.ts` in the app root. Start Metro or run an Android export to generate it before the first typecheck if it is missing. Uniwind requires no additional Babel preset or Expo config plugin.
 
 ## Native modules
 
@@ -37,6 +37,12 @@ npm run typecheck
 npx expo install --check
 npx expo-doctor
 ```
+
+## Formatting and commits
+
+Run `npm run format` to format the app, or `npm run format:check` to check formatting. Husky is installed automatically by the `prepare` script on `npm install` and `npm ci`.
+
+The Git repository lives in the parent directory. Its pre-commit hook runs in `expoLocalTuya`: lint-staged formats and re-stages the app's staged files with Prettier, preserving unstaged edits, then ESLint checks the entire app. Formatting failures or ESLint errors block the commit; ESLint warnings do not.
 
 ## Documentation
 
