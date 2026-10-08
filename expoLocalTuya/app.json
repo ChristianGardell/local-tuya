@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "expoLocalTuya",
+    "name": "Tuya Control",
     "slug": "expoLocalTuya",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/splash-lamp.png",
     "userInterfaceStyle": "automatic",
     "scheme": "expolocaltuya",
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/splash-lamp.png",
+        "backgroundColor": "#fafaf9"
       },
       "package": "com.expolocaltuya"
     },
@@ -26,6 +26,14 @@
           "resizeMode": "contain",
           "dark": {
             "backgroundColor": "#0c0a09"
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ]
